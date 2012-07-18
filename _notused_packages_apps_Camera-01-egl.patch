@@ -1,0 +1,48 @@
+From aa4320dfc0ce93db39202e4127e3a604436d62d2 Mon Sep 17 00:00:00 2001
+From: Bryan Gantt <dragonzkiller@gmail.com>
+Date: Fri, 13 Jul 2012 04:07:09 -0500
+Subject: [PATCH] Add MISSING_EGL_EXTERNAL_IMAGE (3/3)
+
+Some devices do not have External OES Textures. This change is ported over from CM9.
+
+Change-Id: Ie34b98524a650145af666eb492a709ca7270c3e4
+---
+ .../src/mosaic_renderer/SurfaceTextureRenderer.cpp |    4 ++++
+ jni/mosaic_renderer_jni.cpp                        |    4 ++++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/jni/feature_mos/src/mosaic_renderer/SurfaceTextureRenderer.cpp b/jni/feature_mos/src/mosaic_renderer/SurfaceTextureRenderer.cpp
+index 88aac36..0fc592e 100755
+--- a/jni/feature_mos/src/mosaic_renderer/SurfaceTextureRenderer.cpp
++++ b/jni/feature_mos/src/mosaic_renderer/SurfaceTextureRenderer.cpp
+@@ -29,7 +29,11 @@ const GLfloat g_vVertices[] = {
+ };
+ GLushort g_iIndices2[] = { 0, 1, 2, 3 };
+ 
++#ifdef MISSING_EGL_EXTERNAL_IMAGE
++const int GL_TEXTURE_EXTERNAL_OES_ENUM = 0x0DE1;
++#else
+ const int GL_TEXTURE_EXTERNAL_OES_ENUM = 0x8D65;
++#endif
+ 
+ const int VERTEX_STRIDE = 6 * sizeof(GLfloat);
+ 
+diff --git a/jni/mosaic_renderer_jni.cpp b/jni/mosaic_renderer_jni.cpp
+index 188df9f..9cb30fb 100644
+--- a/jni/mosaic_renderer_jni.cpp
++++ b/jni/mosaic_renderer_jni.cpp
+@@ -166,7 +166,11 @@ float g_dIdent3x3[] = {
+     0.0, 1.0, 0.0,
+     0.0, 0.0, 1.0};
+ 
++#ifdef MISSING_EGL_EXTERNAL_IMAGE
++const int GL_TEXTURE_EXTERNAL_OES_ENUM = 0x0DE1;
++#else
+ const int GL_TEXTURE_EXTERNAL_OES_ENUM = 0x8D65;
++#endif
+ 
+ static void printGLString(const char *name, GLenum s) {
+     const char *v = (const char *) glGetString(s);
+-- 
+1.7.9.1
+
