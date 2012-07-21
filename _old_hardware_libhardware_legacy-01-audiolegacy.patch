@@ -1,50 +1,52 @@
-From 3aa0926ca084db46530015072009205ac6a9e8a6 Mon Sep 17 00:00:00 2001
+From a35c69d0e52116964e6e254411362b6edf40dc09 Mon Sep 17 00:00:00 2001
 From: Emerson Pinter <dev@pinter.com.br>
-Date: Sat, 21 Jul 2012 00:46:18 -0300
-Subject: [PATCH] AUDIOLEGACY
+Date: Wed, 18 Jul 2012 17:42:30 +0700
+Subject: [PATCH] add support old libaudio
 
-Change-Id: I28f9dd4511c76c0abe1fffed55d9d332ac95f607
 ---
- audio/A2dpAudioInterface.h                       |    2 ++
- audio/Android.mk                                 |    2 +-
- audio/AudioHardwareInterface.cpp                 |    2 ++
- audio/audio_hw_hal.cpp                           |   21 ++++++++++++++++++++-
- include/hardware_legacy/AudioHardwareBase.h      |    3 +++
- include/hardware_legacy/AudioHardwareInterface.h |    2 ++
- 6 files changed, 30 insertions(+), 2 deletions(-)
+ audio/A2dpAudioInterface.h                       |    3 +-
+ audio/Android.mk                                 |    4 +++
+ audio/AudioHardwareInterface.cpp                 |    2 +
+ audio/audio_hw_hal.cpp                           |   30 ++++++++++++++++++++++
+ include/hardware_legacy/AudioHardwareBase.h      |    3 ++
+ include/hardware_legacy/AudioHardwareInterface.h |    2 +
+ 6 files changed, 43 insertions(+), 1 deletions(-)
 
 diff --git a/audio/A2dpAudioInterface.h b/audio/A2dpAudioInterface.h
-index 8fe9745..32b47e0 100644
+index 8fe9745..19a5435 100644
 --- a/audio/A2dpAudioInterface.h
 +++ b/audio/A2dpAudioInterface.h
-@@ -38,7 +38,9 @@ public:
+@@ -38,8 +38,9 @@ public:
      virtual status_t    initCheck();
  
      virtual status_t    setVoiceVolume(float volume);
 +#ifndef USES_AUDIO_LEGACY
      virtual status_t    setMasterVolume(float volume);
+-
 +#endif
- 
      virtual status_t    setMode(int mode);
  
+     // mic mute
 diff --git a/audio/Android.mk b/audio/Android.mk
-index 2629723..a5b4abc 100644
+index a69b9cd..a5b4abc 100644
 --- a/audio/Android.mk
 +++ b/audio/Android.mk
-@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := \
+@@ -10,6 +10,10 @@ LOCAL_SRC_FILES := \
+     AudioHardwareInterface.cpp \
      audio_hw_hal.cpp
  
- ifeq ($(BOARD_USES_AUDIO_LEGACY),true)
--    LOCAL_CFLAGS += -DUSES_AUDIO_LEGACY -DICS_AUDIO_BLOB
++ifeq ($(BOARD_USES_AUDIO_LEGACY),true)
 +    LOCAL_CFLAGS += -DUSES_AUDIO_LEGACY -DNO_SCREEN_STATE_KEY_SUPPORT
- endif
- 
++endif
++
  LOCAL_MODULE := libaudiohw_legacy
+ LOCAL_MODULE_TAGS := optional
+ LOCAL_STATIC_LIBRARIES := libmedia_helper
 diff --git a/audio/AudioHardwareInterface.cpp b/audio/AudioHardwareInterface.cpp
-index 0e109aa..69f36d0 100644
+index 60cce27..8c2fffe 100644
 --- a/audio/AudioHardwareInterface.cpp
 +++ b/audio/AudioHardwareInterface.cpp
-@@ -130,11 +130,13 @@ size_t AudioHardwareBase::getInputBufferSize(uint32_t sampleRate, int format, in
+@@ -128,11 +128,13 @@ size_t AudioHardwareBase::getInputBufferSize(uint32_t sampleRate, int format, in
      return 320;
  }
  
@@ -59,11 +61,25 @@ index 0e109aa..69f36d0 100644
  status_t AudioHardwareBase::dumpState(int fd, const Vector<String16>& args)
  {
 diff --git a/audio/audio_hw_hal.cpp b/audio/audio_hw_hal.cpp
-index d91ffac..fc5f43b 100644
+index ab4d63a..ec90fed 100644
 --- a/audio/audio_hw_hal.cpp
 +++ b/audio/audio_hw_hal.cpp
-@@ -365,8 +365,11 @@ static int adev_set_master_volume(struct audio_hw_device *dev, float volume)
- #ifndef ICS_AUDIO_BLOB
+@@ -81,7 +81,13 @@ static uint32_t out_get_channels(const struct audio_stream *stream)
+ {
+     const struct legacy_stream_out *out =
+         reinterpret_cast<const struct legacy_stream_out *>(stream);
++#ifndef USES_AUDIO_LEGACY
+     return out->legacy_out->channels();
++#else
++    return out->legacy_out->channels() >> 2;
++#endif
++
++
+ }
+ 
+ static audio_format_t out_get_format(const struct audio_stream *stream)
+@@ -358,8 +364,11 @@ static int adev_set_master_volume(struct audio_hw_device *dev, float volume)
+ 
  static int adev_get_master_volume(struct audio_hw_device *dev, float* volume)
  {
 +#ifndef USES_AUDIO_LEGACY
@@ -72,9 +88,9 @@ index d91ffac..fc5f43b 100644
 +#endif
 +    return INVALID_OPERATION;
  }
- #endif
  
-@@ -392,6 +395,13 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
+ static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
+@@ -384,6 +393,13 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
  static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
  {
      struct legacy_audio_device *ladev = to_ladev(dev);
@@ -88,32 +104,39 @@ index d91ffac..fc5f43b 100644
      return ladev->hwif->setParameters(String8(kvpairs));
  }
  
-@@ -449,15 +459,24 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
-         return -ENOMEM;
- 
- #ifndef ICS_AUDIO_BLOB
+@@ -416,18 +432,32 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
+     status_t status;
+     struct legacy_stream_out *out;
+     int ret;
 +#ifdef USES_AUDIO_LEGACY
 +    uint32_t channels;
++#endif
+ 
+     out = (struct legacy_stream_out *)calloc(1, sizeof(*out));
+     if (!out)
+         return -ENOMEM;
+ 
++#ifndef USES_AUDIO_LEGACY
+     out->legacy_out = ladev->hwif->openOutputStream(devices, (int *) &config->format,
+                                                     &config->channel_mask,
+                                                     &config->sample_rate, &status);
++#else
 +    channels = config->channel_mask << 2;
 +    out->legacy_out = ladev->hwif->openOutputStream(devices, (int *) &config->format,
 +                                                    &channels,
 +                                                    &config->sample_rate, &status);
-+    config->channel_mask = channels >> 2;
-+#else
-     out->legacy_out = ladev->hwif->openOutputStream(devices, (int *) &config->format,
-                                                     &config->channel_mask,
-                                                     &config->sample_rate, &status);
 +#endif
- #else
-     out->legacy_out = ladev->hwif->openOutputStream(devices, format, channels,
-                                                     sample_rate, &status);
- #endif
++
+     if (!out->legacy_out) {
+         ret = status;
+         goto err_open;
+     }
++#ifdef USES_AUDIO_LEGACY
++    config->channel_mask = channels >> 2;
++#endif
  
--#ifdef USES_AUDIO_LEGACY
-+#ifdef ICS_AUDIO_BLOB
-     *channels = *channels >> 2;
- #endif
- 
+     out->stream.common.get_sample_rate = out_get_sample_rate;
+     out->stream.common.set_sample_rate = out_set_sample_rate;
 diff --git a/include/hardware_legacy/AudioHardwareBase.h b/include/hardware_legacy/AudioHardwareBase.h
 index eac40dc..771f757 100644
 --- a/include/hardware_legacy/AudioHardwareBase.h
@@ -130,10 +153,10 @@ index eac40dc..771f757 100644
      /**This method dumps the state of the audio hardware */
      virtual status_t dumpState(int fd, const Vector<String16>& args);
 diff --git a/include/hardware_legacy/AudioHardwareInterface.h b/include/hardware_legacy/AudioHardwareInterface.h
-index 4bd56d4..6e7e06b 100644
+index b466000..598d8f7 100644
 --- a/include/hardware_legacy/AudioHardwareInterface.h
 +++ b/include/hardware_legacy/AudioHardwareInterface.h
-@@ -218,6 +218,7 @@ public:
+@@ -216,6 +216,7 @@ public:
       */
      virtual status_t    setMasterVolume(float volume) = 0;
  
@@ -141,7 +164,7 @@ index 4bd56d4..6e7e06b 100644
      /**
       * Get the current master volume value for the HAL, if the HAL supports
       * master volume control.  AudioFlinger will query this value from the
-@@ -225,6 +226,7 @@ public:
+@@ -223,6 +224,7 @@ public:
       * the initial master volume across all HALs.
       */
      virtual status_t    getMasterVolume(float *volume) = 0;
