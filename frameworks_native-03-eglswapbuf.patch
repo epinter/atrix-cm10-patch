@@ -1,7 +1,7 @@
-From c05e905f79f036c58f3a910316042a666b766125 Mon Sep 17 00:00:00 2001
+From 35bca49e55520b51b03ff1ffa84932d8858b9b34 Mon Sep 17 00:00:00 2001
 From: Emerson Pinter <dev@pinter.com.br>
 Date: Thu, 19 Jul 2012 08:55:11 -0300
-Subject: [PATCH] Always return true for eglSwapBuffers
+Subject: [PATCH 3/6] Always return true for eglSwapBuffers
 
 Change-Id: I1940f0b9062856a69958372635dee207288cbf99
 ---

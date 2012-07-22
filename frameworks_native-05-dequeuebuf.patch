@@ -1,7 +1,7 @@
-From 6a97d34d45666400736fdafcdbf6513602b19a22 Mon Sep 17 00:00:00 2001
+From 7844d5bfc532ff8a355f75e3b9fc0fdf287c7d62 Mon Sep 17 00:00:00 2001
 From: Emerson Pinter <dev@pinter.com.br>
 Date: Thu, 19 Jul 2012 12:24:56 -0300
-Subject: [PATCH] SurfaceTexture: dequeueBuffer hack for older EGL blobs
+Subject: [PATCH 5/6] SurfaceTexture: dequeueBuffer hack for older EGL blobs
 
 Port from CM9
 
