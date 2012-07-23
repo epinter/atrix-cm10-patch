@@ -1,0 +1,59 @@
+From cb1b3e30a0ee2c236fce0fe93b94f33df2a3ccee Mon Sep 17 00:00:00 2001
+From: Emerson Pinter <dev@pinter.com.br>
+Date: Sun, 22 Jul 2012 19:16:41 -0300
+Subject: [PATCH] surfaceflinger: Add support for LGE's HDMI rotation
+
+Use BOARD_USES_LGE_HDMI_ROTATION to align the HDMI output orientation
+with the device's, on LGE phones (p990/p999, at least)
+
+Change-Id: I69b9d5de2449df915710f1e2a6df8dcf6a04d06a
+---
+ services/surfaceflinger/Android.mk         |    6 ++++++
+ services/surfaceflinger/SurfaceFlinger.cpp |    7 +++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/services/surfaceflinger/Android.mk b/services/surfaceflinger/Android.mk
+index 4a5deeb..e5f978e 100644
+--- a/services/surfaceflinger/Android.mk
++++ b/services/surfaceflinger/Android.mk
+@@ -53,6 +53,12 @@ ifneq ($(TARGET_BUILD_PDK), true)
+ 	LOCAL_SRC_FILES += DdmConnection.cpp
+ endif
+ 
++ifeq ($(BOARD_USES_LGE_HDMI_ROTATION),true)
++LOCAL_CFLAGS += -DUSE_LGE_HDMI
++LOCAL_SHARED_LIBRARIES += \
++	libnvdispmgr_d
++endif
++
+ ifeq ($(TARGET_SOC),exynos5250)
+ LOCAL_CFLAGS += -DSAMSUNG_EXYNOS5250
+ endif
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index 7f83d6f..7d8e9f6 100644
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -72,6 +72,10 @@
+ 
+ #define DISPLAY_COUNT       1
+ 
++#ifdef USE_LGE_HDMI
++extern "C" void NvDispMgrAutoOrientation(int rotation);
++#endif
++
+ namespace android {
+ // ---------------------------------------------------------------------------
+ 
+@@ -2809,6 +2813,9 @@ status_t GraphicPlane::setOrientation(int orientation)
+     mWidth = int(w);
+     mHeight = int(h);
+ 
++#ifdef USE_LGE_HDMI
++    NvDispMgrAutoOrientation(orientation);
++#endif
+     Transform orientationTransform;
+     GraphicPlane::orientationToTransfrom(orientation, w, h,
+             &orientationTransform);
+-- 
+1.7.9.1
+
