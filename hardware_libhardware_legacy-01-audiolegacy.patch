@@ -1,4 +1,4 @@
-From 3aa0926ca084db46530015072009205ac6a9e8a6 Mon Sep 17 00:00:00 2001
+From 8e262ed54221d31ac2562b633874fc880cd1bb6d Mon Sep 17 00:00:00 2001
 From: Emerson Pinter <dev@pinter.com.br>
 Date: Sat, 21 Jul 2012 00:46:18 -0300
 Subject: [PATCH] AUDIOLEGACY
@@ -28,14 +28,14 @@ index 8fe9745..32b47e0 100644
      virtual status_t    setMode(int mode);
  
 diff --git a/audio/Android.mk b/audio/Android.mk
-index 2629723..a5b4abc 100644
+index 72437a2..a5b4abc 100644
 --- a/audio/Android.mk
 +++ b/audio/Android.mk
 @@ -11,7 +11,7 @@ LOCAL_SRC_FILES := \
      audio_hw_hal.cpp
  
  ifeq ($(BOARD_USES_AUDIO_LEGACY),true)
--    LOCAL_CFLAGS += -DUSES_AUDIO_LEGACY -DICS_AUDIO_BLOB
+-    LOCAL_CFLAGS += -DUSES_AUDIO_LEGACY
 +    LOCAL_CFLAGS += -DUSES_AUDIO_LEGACY -DNO_SCREEN_STATE_KEY_SUPPORT
  endif
  

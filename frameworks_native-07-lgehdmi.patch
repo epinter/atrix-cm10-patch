@@ -1,4 +1,4 @@
-From cb1b3e30a0ee2c236fce0fe93b94f33df2a3ccee Mon Sep 17 00:00:00 2001
+From 34b5714f92b00f01e791b3485de22640fd77c31b Mon Sep 17 00:00:00 2001
 From: Emerson Pinter <dev@pinter.com.br>
 Date: Sun, 22 Jul 2012 19:16:41 -0300
 Subject: [PATCH] surfaceflinger: Add support for LGE's HDMI rotation
@@ -8,19 +8,21 @@ with the device's, on LGE phones (p990/p999, at least)
 
 Change-Id: I69b9d5de2449df915710f1e2a6df8dcf6a04d06a
 ---
- services/surfaceflinger/Android.mk         |    6 ++++++
+ services/surfaceflinger/Android.mk         |    8 ++++++++
  services/surfaceflinger/SurfaceFlinger.cpp |    7 +++++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
+ 2 files changed, 15 insertions(+), 0 deletions(-)
 
 diff --git a/services/surfaceflinger/Android.mk b/services/surfaceflinger/Android.mk
-index 4a5deeb..e5f978e 100644
+index 4a5deeb..80e02ee 100644
 --- a/services/surfaceflinger/Android.mk
 +++ b/services/surfaceflinger/Android.mk
-@@ -53,6 +53,12 @@ ifneq ($(TARGET_BUILD_PDK), true)
+@@ -53,6 +53,14 @@ ifneq ($(TARGET_BUILD_PDK), true)
  	LOCAL_SRC_FILES += DdmConnection.cpp
  endif
  
 +ifeq ($(BOARD_USES_LGE_HDMI_ROTATION),true)
++$(shell mkdir -p $(OUT)/obj/SHARED_LIBRARIES/libnvdispmgr_d_intermediates/)
++$(shell touch $(OUT)/obj/SHARED_LIBRARIES/libnvdispmgr_d_intermediates/export_includes)
 +LOCAL_CFLAGS += -DUSE_LGE_HDMI
 +LOCAL_SHARED_LIBRARIES += \
 +	libnvdispmgr_d
